@@ -57,12 +57,26 @@
 	 :on-complete on-complete
 	 :token token}))
 
+(defn search-component [data owner]
+    (reify
+        om/IRender
+        (render [_]
+            (dom/div #js {:className "row"}
+                (dom/div #js {:className "col-sm-12"}
+                    (dom/div #js {:className "input-group"}
+                        (dom/span #js {:className "input-group-addon"
+                                       :id "basic-addon1"} "Search")
+                        (dom/input #js {:className "form-control"
+                                        :type "text"
+                                        :placeholder "Where do you want to go?"
+                                        :aria-describedby "basic-addon1"})))))))
+
 (defn app-view [data owner]
 	(reify
 		om/IRender
 		(render [_]
-            (dom/button #js {:className "btn btn-primary btn-danger"
-                             :onClick #(.alert js/window "ha")} (str (:buses data))))))
+            (dom/div #js {:className "container-fluid"}
+                (om/build search-component data)))))
 
 (om/root app-view app-state
     {:target (. js/document (getElementById "app"))})
