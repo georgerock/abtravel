@@ -16,9 +16,10 @@
 
 ;; define your app data so that it doesn't get over-written on reload
 
-(defonce app-state (atom {:buses "asdf"
+(defonce app-state (atom {:buses []
                           :stations []
-                          :lines []}))
+                          :lines []
+                          :found-locations []}))
 
 (defrecord Bus [id number coords])
 (defrecord Station [id coords tags])
@@ -57,18 +58,37 @@
 	 :on-complete on-complete
 	 :token token}))
 
+(defn location-component [data owner]
+    (reify
+        om/IRender
+        (render [_]
+            (dom/div #js {:className "row"}
+                (dom/div #js {:className "col-sm-12"}
+                    (dom/div #js {:className "panel panel-default"}
+                        (dom/div #js {:className "panel-heading"} "Location 1")
+                        (dom/div #js {:className "panel-body"}
+                            (dom/div #js {:className "text-center"}
+                                (dom/p nil "AB08STS - 5 mins")
+                                (dom/p nil "You - 3 mins")
+                                (dom/br nil)
+                                (dom/div #js {:className "row"}
+                                    (dom/div #js {:className "col-sm-6"}
+                                        (dom/button #js {:className "btn btn-primary btn-danger"} "Buy Ticket"))
+                                    (dom/div #js {:className "col-sm-6"}
+                                        (dom/button #js {:className "btn btn-primary btn-success"} "Go there")))))))))))
+
 (defn search-component [data owner]
     (reify
         om/IRender
         (render [_]
             (dom/div #js {:className "row"}
                 (dom/div #js {:className "col-sm-12"}
-                    (dom/div #js {:className "input-group"}
+                    (dom/div #js {:className "input-group input-group-lg"}
                         (dom/span #js {:className "input-group-addon"
-                                       :id "basic-addon1"} "Search")
+                                       :id "basic-addon1"} "Places")
                         (dom/input #js {:className "form-control"
                                         :type "text"
-                                        :placeholder "Where do you want to go?"
+                                        :placeholder "Going somewhere?"
                                         :aria-describedby "basic-addon1"})))))))
 
 (defn app-view [data owner]
@@ -76,7 +96,11 @@
 		om/IRender
 		(render [_]
             (dom/div #js {:className "container-fluid"}
-                (om/build search-component data)))))
+                (dom/div #js {:className "panel panel-default"}
+                    (dom/div #js {:className "panel-heading"} "ABTravel")
+                    (dom/div #js {:className "panel-body"}
+                        (om/build search-component data)
+                        (om/build location-component data)))))))
 
 (om/root app-view app-state
     {:target (. js/document (getElementById "app"))})
