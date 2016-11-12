@@ -47,16 +47,21 @@
 				(on-complete (js->clj (if (= method "GET")
 										  (.getResponseJson xhr)
 										  (.getResponse xhr))))))
-		(.send url method (when data (-> (clj->js data) (Map.) (QueryData.createFromMap) (.toString)))
-		 	#js {"Content-Type" content-type})))
+		(. xhr
+            (send url method (when data (-> (clj->js data) (Map.) (QueryData.createFromMap) (.toString)))
+		 	    #js {"Content-Type" content-type}))))
 
-(defn xhr-request [method url data on-complete token]
+(defn xhr-request [method url data on-complete]
 (json-xhr
 	{:method method
 	 :url url
 	 :data data
-	 :on-complete on-complete
-	 :token token}))
+	 :on-complete on-complete}))
+
+(defn get-something! []
+    (xhr-request "GET" "http://172.17.0.2:5984" nil
+        (fn [res]
+            (js/console.log (clj->js res)))))
 
 (defn location-component [data owner]
     (reify
@@ -72,10 +77,12 @@
                                 (dom/p nil "You - 3 mins")
                                 (dom/br nil)
                                 (dom/div #js {:className "row"}
-                                    (dom/div #js {:className "col-sm-6"}
-                                        (dom/button #js {:className "btn btn-primary btn-danger"} "Buy Ticket"))
-                                    (dom/div #js {:className "col-sm-6"}
-                                        (dom/button #js {:className "btn btn-primary btn-success"} "Go there")))))))))))
+                                    (dom/div #js {:className "col-xs-6"}
+                                        (dom/button #js {:className "mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent"
+                                                         :onClick #(get-something!)} "Buy Ticket"))
+                                    (dom/div #js {:className "col-xs-6"}
+                                        (dom/button #js {:className "btn btn-primary btn-success"
+                                                         :onClick #(js/window.alert "GO!")} "Go there")))))))))))
 
 (defn search-component [data owner]
     (reify
