@@ -90,28 +90,35 @@
         (render [_]
             (dom/div #js {:className "row"}
                 (dom/div #js {:className "col-sm-12"}
-                    (dom/form #js {:action "#"}
-                        (dom/div #js {:className "mdl-textfield mdl-js-textfield mdl-textfield--expandable"}
-                            (dom/label #js {:className "mdl-buton mdl-js-button mdl-button--icon"
-                                            :for "locationSearch"}
-                                (dom/i #js {:className "material-icons"} "search"))
-                            (dom/div #js {:className "mdl-textfield__expandable-holder"}
-                                (dom/input #js {:className "mdl-textfield__input"
-                                                :type "text"
-                                                :id "locationSearch"})
-                                (dom/label #js {:className "mdl-textfield__label"
-                                                :for "expandableSearch"} "locationSearch")))))))))
+                    (dom/div #js {:className "jumbotron"}
+                        (dom/div #js {:className "container-fluid"}
+                            (dom/h4 nil "Statia - Casa Armatei")
+                            (dom/p nil "AB 08 STS - 5 min")
+                            (dom/p nil "Tu - 3 min")
+                            (dom/div #js {:className "row"}
+                                (dom/div #js {:className "col-xs-6"}
+                                    (dom/button #js {:className "btn btn-primary btn-danger"} "Cumpara Bilet"))
+                                (dom/div #js {:className "col-xs-6"}
+                                    (dom/button #js {:className "btn btn-primary btn-success"} "Du-te in statie"))))))))))
 
 (defn app-view [data owner]
     (reify
         om/IRender
         (render [_]
-            (dom/div #js {:className "demo-card-wide mdl-card mdl-shadow--2dp"}
-                (dom/div #js {:className "mdl-card__title"}
-                    (dom/h2 #js {:className "mdl-card__title-text"} "ABTravel"))
-                (dom/div #js {:className "mdl-card__supporting-text"}
-                    "Va rugam introduceti locatia unde vreti sa ajungeti!")
-                (dom/div #js {:className "mdl-card__actions mdl-card--border"}
+            (dom/div #js {:className "panel panel-default"}
+                (dom/div #js {:className "panel-heading"}
+                    (dom/h3 #js {:className "panel-title"} "ABTravel"))
+                (dom/div #js {:className "panel-body"}
+                    (dom/p nil "Where do you want to go?")
+                    (dom/div #js {:className "row"}
+                        (dom/div #js {:className "col-xs-12"}
+                            (dom/div #js {:className "input-group"}
+                                (dom/span #js {:className "input-group-btn"}
+                                    (dom/button #js {:className "btn btn-default"}
+                                        (dom/i #js {:className "fa fa-search"})))
+                                (dom/input #js {:className "form-control"
+                                                :type "text"
+                                                :placeholder "Cauta..."}))))
                     (om/build search-component data))))))
 
 (defn application [data owner]
