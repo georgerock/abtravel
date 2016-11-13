@@ -21,9 +21,8 @@
                           :lines []
                           :found-locations []}))
 
-(defrecord Bus [id number coords])
+(defrecord Bus [id number lat long rev])
 (defrecord Station [id coords tags])
-
 
 (extend-type js/NodeList
 	ISeqable
@@ -41,7 +40,7 @@
 	(let [xhr (XhrIo.)
 		  content-type (if (= method "GET")
    						"application/json"
-   						"application/x-www-form-urlencoded-data; charset=UTF8")]
+   						"application/json")]
 		(events/listen xhr goog.net.EventType.COMPLETE
 			(fn [e]
 				(on-complete (js->clj (if (= method "GET")
@@ -51,6 +50,19 @@
             (send url method (when data (-> (clj->js data) (Map.) (QueryData.createFromMap) (.toString)))
 		 	    #js {"Content-Type" content-type}))))
 
+(defn parse-buses [res data]
+    (let [arr (get res "rows")
+         values (map #(get % "value") arr)
+         keywordize (fn [b]
+                        (let [id (get b "id")
+                              number (get b "number")
+                              lat (get b "lat")
+                              long (get b "long")
+                              rev (get b "rev")]
+                              (Bus. id number lat long rev)))
+         parsed-buses (map #(keywordize %) values)]
+        (om/transact! data :buses (fn [_] parsed-buses))))
+
 (defn xhr-request [method url data on-complete]
 (json-xhr
 	{:method method
@@ -58,31 +70,27 @@
 	 :data data
 	 :on-complete on-complete}))
 
-(defn get-something! []
-    (xhr-request "GET" "http://172.17.0.2:5984" nil
-        (fn [res]
-            (js/console.log (clj->js res)))))
+(defn update-bus [bus]
+    (let [id (:id bus)
+          lat "1251251"
+          long "1251612"
+          number "SETESEE"
+          rev (:rev bus)
+          data {:number number :long long :lat lat :_rev rev}] (.log js/console (:id bus))
+    (xhr-request "PUT" (str "http://172.17.0.2:5984/buses/" (:id bus) "/") (.stringify js/JSON (clj->js data))
+        (fn [res] (.log js/console (clj->js res))))))
 
-(defn location-component [data owner]
+(defn get-something! [e data]
+    (.stopPropagation e)
+    (xhr-request "GET" "http://172.17.0.2:5984/buses/_design/buses/_view/buses" nil
+        (fn [res]
+            (parse-buses res data))))
+
+(defn map-component [data owner]
     (reify
         om/IRender
         (render [_]
-            (dom/div #js {:className "row"}
-                (dom/div #js {:className "col-sm-12"}
-                    (dom/div #js {:className "panel panel-default"}
-                        (dom/div #js {:className "panel-heading"} "Location 1")
-                        (dom/div #js {:className "panel-body"}
-                            (dom/div #js {:className "text-center"}
-                                (dom/p nil "AB08STS - 5 mins")
-                                (dom/p nil "You - 3 mins")
-                                (dom/br nil)
-                                (dom/div #js {:className "row"}
-                                    (dom/div #js {:className "col-xs-6"}
-                                        (dom/button #js {:className "mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent"
-                                                         :onClick #(get-something!)} "Buy Ticket"))
-                                    (dom/div #js {:className "col-xs-6"}
-                                        (dom/button #js {:className "mdl-button mdl-js-button mdl-button--raised mdl-button--colored"
-                                                         :onClick #(js/window.alert "GO!")} "Go there")))))))))))
+            (dom/p nil "vlad is here"))))
 
 (defn search-component [data owner]
     (reify
@@ -97,9 +105,11 @@
                             (dom/p nil "Tu - 3 min")
                             (dom/div #js {:className "row"}
                                 (dom/div #js {:className "col-xs-6"}
-                                    (dom/button #js {:className "btn btn-primary btn-danger"} "Cumpara Bilet"))
-                                (dom/div #js {:className "col-xs-6"}
-                                    (dom/button #js {:className "btn btn-primary btn-success"} "Du-te in statie"))))))))))
+                                    (dom/button #js {:className "btn btn-primary btn-danger"
+                                                     :onClick #(get-something! % data)} "Cumpara Bilet"))
+                                (dom/div #js {:className "col-xs-6"} (.log js/console (clj->js (:buses data)))
+                                    (dom/button #js {:className "btn btn-primary btn-success"
+                                                     :onClick #(update-bus (first (:buses data)))} "Du-te in statie"))))))))))
 
 (defn app-view [data owner]
     (reify
@@ -119,7 +129,8 @@
                                 (dom/input #js {:className "form-control"
                                                 :type "text"
                                                 :placeholder "Cauta..."}))))
-                    (om/build search-component data))))))
+                    (om/build search-component data)
+                    (om/build map-component data))))))
 
 (defn application [data owner]
 	(reify
